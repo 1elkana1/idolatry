@@ -1,6 +1,6 @@
-from .core.game import Game
-from .core.deities import Deity
-from .core.entities import Entity
+from app.core.game import Game
+from app.core.deities import Deity
+from app.core.entities import Entity
 
 
 if __name__ == "__main__":
