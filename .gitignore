@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.env/
+
+# SQLite DB (optional, if you don’t want to upload your game.db)
+*.db
+
+# VS Code
+.vscode/
