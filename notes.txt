@@ -1,0 +1,19 @@
+sky/earth gods - do nothing?
+sun gods - inteligence (details on map)
+moon gods - darkness: slow the enemies near cause they cant travel at night
+water gods - increase harvest
+sheperd gods - increase livestock
+healing gods - increase army health
+plauge gods - decrease enemy's army health
+love gods - increase army
+hell gods - decrease enemy's army
+storm gods - increase army power
+mountain gods - decrease enemy's army power
+
+army: archers, phalanx, udugs (demons).
+resources: harvest, livestock
+
+cultic timeline: sumer, anu, temples, ensis --> enlil, lugals --> babylon, marduk, status
+
+run api with swagger:
+(venv) C:\Users\dell\source\repos\idolatry>uvicorn app.api.api:app --reload
