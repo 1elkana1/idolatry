@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 
@@ -14,6 +14,8 @@ from app.core.deities import Deity
 from app.db.repositories.entities_repo import EntityRepository
 from app.db.repositories.deities_repo import DeityRepository
 from app.db.repositories.cults_repo import CultRepository
+from app.api.DTOs.schemas import EntitySchema, DeitySchema, CultSchema
+from app.api.DTOs import serializers
 
 # ---- api models ----
 class EntityCreate(BaseModel):
@@ -42,28 +44,16 @@ def create_deity(deity: DeityCreate):
     deities_repo = DeityRepository(db)
     deities_repo.save_without_cults(d)
     db.commit()
-    # mappers.save_deity(db, d)
     return {"message": f"Deity {d.name} created."}
 
-@app.get("/deity/{deity_id}")
+@app.get("/deity/{deity_id}", response_model=DeitySchema)
 def get_deity(deity_id: int):
     deities_repo = DeityRepository(db)
     deity = deities_repo.get_without_cults(deity_id)
     if not deity:
-        return {"error": "Deity not found"}
+        raise HTTPException(status_code=404, detail=f"Deity {deity_id} not found")
     deities_repo.populate_deity_cults(deity, EntityRepository(db), CultRepository(db))
-    return {
-        "id": deity.id,
-        "name": deity.name,
-        "domain": deity.domain,
-        "cults": [
-            {
-                "entity_id": cult.entity.id,
-                "entity_name": cult.entity.name,
-                "offerings": cult.offerings
-            } for cult in deity.cults
-        ]
-    }    
+    return serializers.deity_to_schema(deity)
 
 @app.post("/entity")
 def create_entity(entity: EntityCreate):
@@ -78,31 +68,16 @@ def create_entity(entity: EntityCreate):
         e.establish_cult_to(patron)
         entities_repo.save_entity_cults(e, CultRepository(db), deities_repo)
     db.commit()
-    # d = mappers.load_deity(db, entity.patron_id)
-    # e = Entity(entity.name, d)
-    # mappers.save_entity(db, e)
     return {"message": f"Entity {e.name} created."}
 
-@app.get("/entity/{entity_id}")
+@app.get("/entity/{entity_id}", response_model=EntitySchema)
 def get_entity(entity_id: int):
     entities_repo = EntityRepository(db)
     entity = entities_repo.get_without_cults(entity_id)
     if not entity:
-        return {"error": "Entity not found"}
+        raise HTTPException(status_code=404, detail=f"Entity {entity_id} not found")
     entities_repo.populate_entity_cults(entity, DeityRepository(db), CultRepository(db))
-    return {
-        "id": entity.id,
-        "name": entity.name,
-        "army": entity.army,
-        "wealth": entity.wealth,
-        "cults": [
-            {
-                "deity_id": cult.deity.id,
-                "deity_name": cult.deity.name,
-                "offerings": cult.offerings
-            } for cult in entity.cults
-        ]
-    }
+    return serializers.entity_to_schema(entity)
 
 @app.post("/battle")
 def initiate_battle(battle: Battle):
@@ -129,10 +104,16 @@ def make_offering(offering: Offering):
 
 @app.get("/state")
 def game_state():
-    entity = mappers.load_entity(db, 1)
-    deity = mappers.load_deity(db, 1)
-    if entity and deity:
-        return {
-            "entities": entity.name,
-            "deities": deity.name
-        }
+    entities_repo = EntityRepository(db)
+    deities_repo = DeityRepository(db)
+    cults_repo = CultRepository(db)
+    entities = entities_repo.list_all()
+    deities = deities_repo.list_all()
+    for entity in entities:
+        entities_repo.populate_entity_cults(entity, deities_repo, cults_repo)
+    for deity in deities:
+        deities_repo.populate_deity_cults(deity, entities_repo, cults_repo)
+    return {
+        "entities": [serializers.entity_to_schema(e) for e in entities], # type: ignore
+        "deities": [serializers.deity_to_schema(d) for d in deities]
+    }

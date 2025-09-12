@@ -25,7 +25,7 @@ class DeityRepository:
         db_deity = self.db.get(models.DeityDB, deity.id)
         db_cults = db_deity.cults if db_deity else []
         for db_cult in db_cults:
-            cult = cults_repo.get(db_cult.id, entities_repo, self)
+            cult = cults_repo.get_by_id(db_cult.id, entities_repo, self)
             cult.offerings = db_cult.offerings
             deity.add_cult(cult)
     
