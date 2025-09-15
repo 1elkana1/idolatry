@@ -23,5 +23,13 @@ storms potential grows as u go north
 
 cultic timeline: sumer, anu, temples, ensis --> enlil, lugals --> babylon, marduk, status
 
-run api locally with swagger:
+
+
+get into venv:
+C:\Users\dell\source\repos\idolatry>venv\Scripts\activate
+
+run api locally (http://127.0.0.1:8000) with swagger:
 (venv) C:\Users\dell\source\repos\idolatry>uvicorn app.api.api:app --reload
+
+run react frontend locally (http://localhost:5173/):
+npm run dev
