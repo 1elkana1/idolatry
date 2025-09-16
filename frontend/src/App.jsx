@@ -1,90 +1,101 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 function App() {
-  const [state, setState] = useState({ entities: [], deities: [] });
-  const [selectedEntity, setSelectedEntity] = useState(null);
-  const [selectedDeity, setSelectedDeity] = useState(null);
+  const [state, setState] = useState(null);
+  const [newDeity, setNewDeity] = useState({ name: "", domain: "" });
+  const [newEntity, setNewEntity] = useState("");
 
+  // fetch state from backend
+  const fetchState = async () => {
+    const res = await fetch("http://127.0.0.1:8000/state");
+    const data = await res.json();
+    setState(data);
+  };
+    
+  // useEffect = on mount (initial fetch)
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/state")
-      .then((res) => res.json())
-      .then((data) => setState(data))
-      .catch((err) => console.error(err));
+    fetchState();
   }, []);
 
+  // POST deity
+  const createDeity = async (e) => {
+    e.preventDefault(); // stop the browser from refreshing the page after form submission (default form behavior)
+    await fetch("http://127.0.0.1:8000/deity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newDeity),
+    });
+    setNewDeity({ name: "", domain: "" }); // clear fields
+    fetchState(); // refresh state
+  };
+
+  // POST entity
+  const createEntity = async (e) => {
+    e.preventDefault();
+    await fetch("http://127.0.0.1:8000/entity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newEntity }),
+    });
+    setNewEntity("");
+    fetchState();
+  };
+
+  // handle form input changes
+  const handleDeityChange = (e) => {
+    const { name, value } = e.target;
+    setNewDeity((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // after all the above js logic, return this jsx (mix of html and js) to be rendered
+  // className => config tailwind css classes
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold mb-6">Idolatry Game</h1>
+    <div className="p-4">
+      <h1 className="text-xl font-bold mb-4">Idolatry Demo</h1>
 
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Entities Panel */}
-        <div className="md:w-1/2 bg-white p-4 rounded shadow">
-          <h2 className="text-xl font-semibold mb-4">Entities</h2>
-          {state.entities.length > 0 ? (
-            <ul>
-              {state.entities.map((e) => (
-                <li
-                  key={e.id}
-                  className="p-2 cursor-pointer hover:bg-gray-100 rounded"
-                  onClick={() => setSelectedEntity(e)}
-                >
-                  {e.name}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>Loading entities...</p>
-          )}
+      {/* Form for deity */}
+      <form onSubmit={createDeity} className="mb-4">
+        <input
+          type="text"
+          name="name"
+          placeholder="Deity name"
+          value={newDeity.name}
+          onChange={handleDeityChange}
+          className="border p-1 mr-2"
+          required
+        />
+        <input
+          type="text"
+          name="domain"
+          placeholder="Domain"
+          value={newDeity.domain}
+          onChange={handleDeityChange}
+          className="border p-1 mr-2"
+          required
+        />
+        <button type="submit" className="bg-blue-500 text-white px-4 py-2">
+          Add Deity
+        </button>
+      </form>
 
-          {selectedEntity && (
-            <div className="mt-4 p-3 border rounded bg-gray-50">
-              <h3 className="font-semibold">{selectedEntity.name}</h3>
-              <p>ID: {selectedEntity.id}</p>
-              <p>Patron Deity: {selectedEntity.patron?.name || "None"}</p>
-              <button
-                className="mt-2 px-2 py-1 border rounded hover:bg-gray-100"
-                onClick={() => setSelectedEntity(null)}
-              >
-                Close
-              </button>
-            </div>
-          )}
-        </div>
+      {/* Form for entity */}
+      <form onSubmit={createEntity} className="mb-4">
+        <input
+          type="text"
+          value={newEntity}
+          onChange={(e) => setNewEntity(e.target.value)}
+          placeholder="Entity name"
+          className="border p-2 mr-2"
+        />
+        <button type="submit" className="bg-green-500 text-white px-4 py-2">
+          Add Entity
+        </button>
+      </form>
 
-        {/* Deities Panel */}
-        <div className="md:w-1/2 bg-white p-4 rounded shadow">
-          <h2 className="text-xl font-semibold mb-4">Deities</h2>
-          {state.deities.length > 0 ? (
-            <ul>
-              {state.deities.map((d) => (
-                <li
-                  key={d.id}
-                  className="p-2 cursor-pointer hover:bg-gray-100 rounded"
-                  onClick={() => setSelectedDeity(d)}
-                >
-                  {d.name}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>Loading deities...</p>
-          )}
-
-          {selectedDeity && (
-            <div className="mt-4 p-3 border rounded bg-gray-50">
-              <h3 className="font-semibold">{selectedDeity.name}</h3>
-              <p>ID: {selectedDeity.id}</p>
-              <p>Domain: {selectedDeity.domain}</p>
-              <button
-                className="mt-2 px-2 py-1 border rounded hover:bg-gray-100"
-                onClick={() => setSelectedDeity(null)}
-              >
-                Close
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Show current state */}
+      <pre className="bg-gray-100 p-4 rounded">
+        {state ? JSON.stringify(state, null, 2) : "Loading..."}
+      </pre>
     </div>
   );
 }
