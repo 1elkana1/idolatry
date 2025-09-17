@@ -1,5 +1,5 @@
-from app.db.db import Base, engine
-from app.db import models  # make sure all models are imported
+from db.db import Base, engine
+from db import models
 
 print("Dropping all tables...")
 Base.metadata.drop_all(bind=engine)

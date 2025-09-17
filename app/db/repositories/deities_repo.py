@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.db import models
-from app.core.deities import Deity
+from db import models
+from core.deities import Deity
 
 class DeityRepository:
     def __init__(self, db: Session):

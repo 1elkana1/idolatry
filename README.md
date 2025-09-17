@@ -25,11 +25,11 @@ root/
 ### 1. Backend (FastAPI)
 
 ```sh
-cd app
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn app.api.api:app --reload
+cd app
+uvicorn api.api:app --reload
 ```
 
 Backend runs at: [http://localhost:8000](http://localhost:8000)

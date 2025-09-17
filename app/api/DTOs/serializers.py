@@ -1,14 +1,17 @@
-from app.api.DTOs.schemas import EntitySchema, DeitySchema, CultSchema
-from app.core.entities import Entity
+from api.DTOs.schemas import EntitySchema, DeitySchema, CultSchema
+from core.entities import Entity
 
 def entity_to_schema(entity: Entity) -> EntitySchema:
     if not entity.id:
         raise ValueError("Entity have no ID - not persisted?")
+    patron = entity.patron()
     return EntitySchema(
         id=entity.id,
         name=entity.name,
         army=entity.army,
         wealth=entity.wealth,
+        patron_id=patron.id if patron else None,
+        patron_name=patron.name if patron else None,
         cults=[cult_to_schema(cult) for cult in entity.cults]
     )
 

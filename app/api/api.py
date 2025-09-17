@@ -14,18 +14,17 @@ app.add_middleware(
 )
 
 
-from app.db.db import SessionLocal
-from app.db import mappers
+from db.db import SessionLocal
 
 db = SessionLocal()
 
-from app.core.entities import Entity
-from app.core.deities import Deity
-from app.db.repositories.entities_repo import EntityRepository
-from app.db.repositories.deities_repo import DeityRepository
-from app.db.repositories.cults_repo import CultRepository
-from app.api.DTOs.schemas import EntitySchema, DeitySchema, CultSchema
-from app.api.DTOs import serializers
+from core.entities import Entity
+from core.deities import Deity
+from db.repositories.entities_repo import EntityRepository
+from db.repositories.deities_repo import DeityRepository
+from db.repositories.cults_repo import CultRepository
+from api.DTOs.schemas import EntitySchema, DeitySchema, CultSchema
+from api.DTOs import serializers
 
 # ---- api models ----
 class EntityCreate(BaseModel):
@@ -54,7 +53,7 @@ def create_deity(deity: DeityCreate):
     deities_repo = DeityRepository(db)
     deities_repo.save_without_cults(d)
     db.commit()
-    return {"message": f"Deity {d.name} created."}
+    return {"message": f"Deity {d.id}.{d.name} created."}
 
 @app.get("/deity/{deity_id}", response_model=DeitySchema)
 def get_deity(deity_id: int):
@@ -78,7 +77,7 @@ def create_entity(entity: EntityCreate):
         e.establish_cult_to(patron)
         entities_repo.save_entity_cults(e, CultRepository(db), deities_repo)
     db.commit()
-    return {"message": f"Entity {e.name} created."}
+    return {"message": f"Entity {e.id}.{e.name} created."}
 
 @app.get("/entity/{entity_id}", response_model=EntitySchema)
 def get_entity(entity_id: int):
@@ -91,26 +90,33 @@ def get_entity(entity_id: int):
 
 @app.post("/battle")
 def initiate_battle(battle: Battle):
-    attacker = mappers.load_entity(db, battle.attacker_id)
-    defender = mappers.load_entity(db, battle.defender_id)
-    if not attacker or not defender:
+    entities_repo = EntityRepository(db)
+    atk = entities_repo.get_without_cults(battle.attacker_id)
+    defn = entities_repo.get_without_cults(battle.defender_id)
+    if not atk or not defn:
         return {"error": "Invalid attacker or defender"}
-    attacker.attack(defender)
-    mappers.save_entity(db, attacker)
-    mappers.save_entity(db, defender)
-    return {"message": f"Battle between {attacker.name} and {defender.name} concluded."}
+    atk.attack(defn)
+    entities_repo.save_without_cults(atk)
+    entities_repo.save_without_cults(defn)
+    db.commit()
+    return {"message": f"Battle between {atk.name} and {defn.name} concluded."}
 
 @app.post("/offering")
 def make_offering(offering: Offering):
-    entity = mappers.load_entity(db, offering.entity_id)
-    deity = mappers.load_deity(db, offering.deity_id)
+    entities_repo = EntityRepository(db)
+    deities_repo = DeityRepository(db)
+    cults_repo = CultRepository(db)
+    entity = entities_repo.get_without_cults(offering.entity_id)
+    entities_repo.populate_entity_cults(entity, deities_repo, cults_repo)
+    deity = deities_repo.get_without_cults(offering.deity_id)
     if not entity or not deity:
         return {"error": "Invalid entity or deity"}
     entity.offer_to(deity, offering.amount)
-    mappers.save_entity(db, entity)
-    mappers.save_deity(db, deity)
-    mappers.save_cult(db, entity.cults[0])
-    return {"message": f"{entity.name} offered {offering.amount} to {deity.name}. full offerings: {entity.cults[0].offerings}."}
+    entities_repo.save_without_cults(entity)
+    deities_repo.save_without_cults(deity)
+    entities_repo.save_entity_cults(entity, cults_repo, deities_repo)
+    db.commit()
+    return {"message": f"{entity.name} offered {offering.amount} to {deity.name} (full offerings: {deity.melam()})."}
 
 @app.get("/state")
 def game_state():

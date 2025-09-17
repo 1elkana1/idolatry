@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.db import models
-from app.core.cults import Cult
+from db import models
+from core.cults import Cult
 
 class CultRepository:
     def __init__(self, db: Session):
@@ -15,7 +15,7 @@ class CultRepository:
             return None
         entity = entities_repo.get_without_cults(db_cult.entity_id)
         deity = deities_repo.get_without_cults(db_cult.deity_id)
-        cult = Cult(entity, deity, db_cult.offerings, db_cult.id) # type: ignore
+        cult = Cult(deity, entity, db_cult.offerings, db_cult.id) # type: ignore
         self._cache[db_cult.id] = cult
         return cult
 
@@ -28,7 +28,7 @@ class CultRepository:
             return None
         if db_cult.id in self._cache:
             return self._cache[db_cult.id]
-        cult = Cult(entity, deity, db_cult.offerings, db_cult.id) # type: ignore
+        cult = Cult(deity, entity, db_cult.offerings, db_cult.id) # type: ignore
         self._cache[db_cult.id] = cult
         return cult
 

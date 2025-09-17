@@ -7,15 +7,17 @@ class CultSchema(BaseModel):
     entity_name: str
     offerings: int
 
+class DeitySchema(BaseModel):
+    id: int
+    name: str
+    domain: str
+    cults: list[CultSchema]
+
 class EntitySchema(BaseModel):
     id: int
     name: str
     army: int
     wealth: int
-    cults: list[CultSchema]
-
-class DeitySchema(BaseModel):
-    id: int
-    name: str
-    domain: str
+    patron_id: int | None
+    patron_name: str | None
     cults: list[CultSchema]

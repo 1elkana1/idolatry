@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.db import models
-from app.core.entities import Entity
+from db import models
+from core.entities import Entity
 
 class EntityRepository:
     def __init__(self, db: Session):

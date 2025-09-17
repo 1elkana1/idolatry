@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
-from .db import Base
+from db.db import Base
 
 class EntityDB(Base):
     __tablename__ = "entities"
