@@ -2,6 +2,9 @@ from sqlalchemy.orm import Session
 from db import models
 from core.entities import Entity
 
+# apparently sqlalchemy caches objects by default,
+# so these repo classes can be simplified. to do one day..
+
 class EntityRepository:
     def __init__(self, db: Session):
         self.db = db
