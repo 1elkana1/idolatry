@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "build:pages": "npm run build && rm -rf ../game/* && cp -r dist/* ../game/",
+    "build:pages": "npm run build && rmdir /S /Q ..\\game && mkdir ..\\game && xcopy dist ..\\game /E /I /Y",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
