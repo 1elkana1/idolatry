@@ -2,5 +2,6 @@ services:
   - type: web
     name: idolatry
     env: python
+    rootDir: app
     buildCommand: "pip install -r requirements.txt"
     startCommand: "uvicorn app.api.api:app --host 0.0.0.0 --port $PORT"
